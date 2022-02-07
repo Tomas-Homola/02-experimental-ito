@@ -1,21 +1,34 @@
 #include "itoStuff.h"
 #include <iomanip>
 
+#define SPEED 10.0 // k samotne ulohe je default hodnota 1.0, ale je zaujimave skusit aj nejake vyssie rychlosti a sledovat, ako na uhol s vacsiou rychlostou menej vplyva proces W
+
 using std::cout;
 using std::endl;
 
-double f(double x)
+double g_rad(double t, double W)
 {
-	return (cos(x) * sin(x));
+	return atan((sqrt(SPEED * t + 1) + W) / (SPEED * t + 1));
+}
+
+double g_deg(double t, double W)
+{
+	return (atan((sqrt(SPEED * t + 1) + W) / (SPEED * t + 1)) / PI) * 180.0;
 }
 
 int main()
 {
-	//srand(time(0));
-	//double endTime = 3.0;
-	//int n = 100, division = 601;
+	srand(time(0));
+	double endTime = 500.0;
+	int division = 5000;
+	
+	ItoProcess ip(endTime, division, 100);
+	ip.computeTrajectoriesTransform(&g_deg);
+	ip.exportData("data100");	
+	ip.reset(endTime, division, 1000);
 
-	double result = NIntegrate_Riemann(0.0, PI/2, &f, 50);
-	cout << "result: " << std::setprecision(15) << result << endl;;
+	ip.computeTrajectoriesTransform(&g_deg);
+	ip.exportData("data1000");
+	
 	return 0;
 }
