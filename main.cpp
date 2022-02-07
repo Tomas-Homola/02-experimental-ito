@@ -19,7 +19,7 @@ double g_deg(double t, double W)
 int main()
 {
 	srand(time(0));
-	double endTime = 500.0;
+	double endTime = 1000.0;
 	int division = 5000;
 	
 	ItoProcess ip(endTime, division, 100);
