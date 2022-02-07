@@ -29,12 +29,24 @@ ItoProcess::~ItoProcess()
 
 void ItoProcess::computeTrajectoriesTransform(double(*transform)(double, double))
 {
+	double t = 0.0, W = 0.0;
+
 	for (size_t i = 0; i < trajectoriesCount; i++)
 	{
+		// Vypocitanie trajektorie wienerovho procesu
 		trajectories[i][0] = normalDistribution(0.0, timeAxis[0] - 0.0);
 		for (size_t j = 1; j < timeAxisTicks; j++)
 		{
 			trajectories[i][j] = trajectories[i][j - 1] + normalDistribution(0.0, timeAxis[j] - timeAxis[j - 1]);
+		}
+
+		// Transformacia na Itoov proces
+		for (size_t j = 0; j < timeAxisTicks; j++)
+		{
+			t = timeAxis[j];
+			W = trajectories[i][j];
+
+			trajectories[i][j] = transform(t, W);
 		}
 		//std::cout << i << "done\n";
 	}
@@ -71,6 +83,7 @@ void ItoProcess::reset(double timeEndValue, unsigned int timeAxisTicks, unsigned
 
 bool ItoProcess::exportData(std::string fileName)
 {
+	std::cout << "Exporting ...";
 	fileName += ".csv";
 	std::ofstream exportFile(fileName);
 	if (!exportFile.is_open())
@@ -93,6 +106,7 @@ bool ItoProcess::exportData(std::string fileName)
 	}
 
 	exportFile.close();
+	std::cout << " export done\n";
 	return true;
 }
 
