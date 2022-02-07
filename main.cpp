@@ -1,7 +1,7 @@
 #include "itoStuff.h"
 #include <iomanip>
 
-#define SPEED 10.0 // k samotne ulohe je default hodnota 1.0, ale je zaujimave skusit aj nejake vyssie rychlosti a sledovat, ako na uhol s vacsiou rychlostou menej vplyva proces W
+#define SPEED 1.0 // k samotne ulohe je default hodnota 1.0, ale je zaujimave skusit aj nejake vyssie rychlosti a sledovat, ako na uhol s vacsiou rychlostou menej vplyva proces W
 
 using std::cout;
 using std::endl;
