@@ -16,19 +16,36 @@ double g_deg(double t, double W)
 	return (atan((sqrt(SPEED * t + 1) + W) / (SPEED * t + 1)) / PI) * 180.0;
 }
 
+double drift(double t, double W)
+{
+	double upper1 = 1.0 + t + 2.0 * sqrt(t + 1.0) * W;
+	double lower1 = 2.0 * sqrt(t + 1.0) * (2.0 + 3.0 * t + t * t + 2.0 * sqrt(t + 1.0) * W + W * W);
+	double upper2 = 2.0 * (t + 1.0) * (sqrt(t + 1.0) + W);
+	double lower2 = 2.0 + 3.0 * t + t * t + 2.0 * sqrt(t + 1.0) * W + W * W;
+
+	return -(upper1 / lower1) - 0.5 * (upper2 / (lower2 * lower2));
+}
+
+double volatility(double t, double W)
+{
+	return (t + 1.0) / (2.0 + 3.0 * t + t * t + 2.0 * sqrt(t + 1.0) * W + W * W);
+}
+
 int main()
 {
 	srand(time(0));
-	double endTime = 1000.0;
-	int division = 5000;
+	double endTime = 2000.0;
+	int division = 500;
 	
 	ItoProcess ip(endTime, division, 100);
-	ip.computeTrajectoriesTransform(&g_deg);
-	ip.exportData("data100");	
+	//ip.computeTrajectoriesTransform(&g_deg);
+	ip.computeTrajectoriesDefinition(&drift, &volatility);
+	ip.exportData("data100_def");	
 	ip.reset(endTime, division, 1000);
-
-	ip.computeTrajectoriesTransform(&g_deg);
-	ip.exportData("data1000");
+	
+	//ip.computeTrajectoriesTransform(&g_deg);
+	ip.computeTrajectoriesDefinition(&drift, &volatility);
+	ip.exportData("data1000_def");
 	
 	return 0;
 }
