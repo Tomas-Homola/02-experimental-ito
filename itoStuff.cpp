@@ -55,7 +55,33 @@ void ItoProcess::computeTrajectoriesTransform(double(*transform)(double, double)
 
 void ItoProcess::computeTrajectoriesDefinition(double(*drift)(double, double), double(*volatility)(double, double))
 {
+	double riemann = 0.0, ito = 0.0;
 
+	std::cout << "computing trajectories ... ";
+	for (size_t i = 0; i < trajectoriesCount; i++)
+	{
+		// Vypocitanie trajektorie wienerovho procesu
+		trajectories[i][0] = normalDistribution(0.0, timeAxis[0] - 0.0);
+		for (size_t j = 1; j < timeAxisTicks; j++)
+		{
+			trajectories[i][j] = trajectories[i][j - 1] + normalDistribution(0.0, timeAxis[j] - timeAxis[j - 1]);
+		}
+
+		// Transformacia na Itoov proces
+		trajectories[i][0] = PI / 4; //??
+		for (size_t j = 1; j < timeAxisTicks; j++)
+		{
+			riemann = NIntegrate_Riemann(0.0, j, drift, this, i);
+			ito = NIntegrate_Ito(0.0, j, volatility, this, i);
+
+			trajectories[i][j] = trajectories[i][0] + riemann + ito;
+			if (trajectories[i][j] < -10000.0)
+				std::cout << "riemann: " << riemann << "\nito: " << ito << "\n";
+			//std::cout << "riemann = " << riemann << "\nito = " << ito << "\n";
+		}
+		//std::cout << i + 1 << " trajectory done\n";
+	}
+	std::cout << " done\n";
 }
 
 void ItoProcess::reset(double timeEndValue, unsigned int timeAxisTicks, unsigned int trajectoriesCount)
@@ -80,7 +106,6 @@ void ItoProcess::reset(double timeEndValue, unsigned int timeAxisTicks, unsigned
 		this->trajectories[i] = (double*)calloc(timeAxisTicks, sizeof(double)); // alokacia pamati pre udaje jednotlivych trajektorii
 	}
 }
-
 bool ItoProcess::exportData(std::string fileName)
 {
 	std::cout << "Exporting ...";
@@ -109,7 +134,6 @@ bool ItoProcess::exportData(std::string fileName)
 	std::cout << " export done\n";
 	return true;
 }
-
 void ItoProcess::printData()
 {
 	for (size_t i = 0; i < timeAxisTicks; i++)
@@ -141,7 +165,6 @@ double* linspace(double startValue, double endValue, int ticks)
 
 	return temp;
 }
-
 double normalDistribution(double mean, double dispersion)
 {
 	// dve nahodne cisla rovnomerne rozdelene z intervalu [0,1]
@@ -154,26 +177,35 @@ double normalDistribution(double mean, double dispersion)
 		return (mean + sqrt(-2.0 * log(U1) * dispersion) * cos(2 * PI * U2));
 }
 
-double NIntegrate_Riemann(double a, double b, double(*function)(double), int n)
+double NIntegrate_Riemann(int a, int b, double(*function)(double, double), ItoProcess* ip, int trajectory)
 {
+	// namiesto "b" dat ako vztup index casu, po ktory sa ma integrovat, aby sa tam dal vopchat aj W
 	double result = 0.0;
-	int temp = n - 1;
-	double deltaX = (b - a) / n;
+	double tempLeft = 0.0, tempRight = 0.0;
+	double deltaT = 0.0;
 
-	result += function(a); // f(x_0)
-	for (size_t i = 1; i <= temp; i++)
+	for (size_t i = 1; i <= b; i++)
 	{
-		result += 2 * function(a + (i * deltaX)); // f(x_1), ..., f(x_{n-1}
+		deltaT = ip->timeAxis[i] - ip->timeAxis[i - 1];
+		tempLeft = deltaT * (function(ip->timeAxis[i - 1], ip->trajectories[trajectory][i - 1]));
+		//tempRight = deltaT * (function(ip->timeAxis[i], ip->trajectories[trajectory][i]));
+
+		//result += 0.5 * (tempLeft + tempRight);
+		result += tempLeft;
 	}
-	result += function(b); // f(x_n)
-	result = (deltaX / 2) * result;
 	
 	return result;
 }
-
-double NIntegrate_Ito(double a, double b, double(*function)(double, double), ItoProcess* ip)
+double NIntegrate_Ito(int a, int b, double(*function)(double, double), ItoProcess* ip, int trajectory)
 {
 	double result = 0.0;
+	double deltaW = 0.0;
+
+	for (size_t i = 1; i <= b; i++)
+	{
+		deltaW = ip->trajectories[trajectory][i] - ip->trajectories[trajectory][i - 1];
+		result += function(ip->timeAxis[i - 1], ip->trajectories[trajectory][i - 1]) * deltaW;
+	}
 
 	return result;
 }

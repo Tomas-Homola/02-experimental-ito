@@ -32,5 +32,5 @@ public:
 
 double* linspace(double startValue, double endValue, int ticks); // funkcia na vytvorenie delenia casovej osi, inspirovane funkciou "linspace" z Matlabu
 double normalDistribution(double mean, double dispersion); // funkcia na generovanie cisel z normalneho rozdelenia N(mean, dispersion), pouzity Box-Muller Transform, zdroj: https://www.youtube.com/watch?v=EXsdT91XFAY&t=194s
-double NIntegrate_Riemann(double a, double b, double (*function)(double), int n = 10); // trapezoidal rule
-double NIntegrate_Ito(double a, double b, double (*function)(double, double), ItoProcess* ip);
+double NIntegrate_Riemann(int a, int b, double (*function)(double, double), ItoProcess* ip, int trajectory);
+double NIntegrate_Ito(int a, int b, double (*function)(double, double), ItoProcess* ip, int trajectory);
