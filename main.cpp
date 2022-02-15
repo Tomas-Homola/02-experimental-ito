@@ -35,7 +35,7 @@ int main()
 {
 	srand(time(0));
 	double endTime = 1000.0;
-	int division = 501;
+	int division = 1001;
 	
 	ItoProcess ip(endTime, division, 100);
 	//ip.computeTrajectoriesTransform(&g_deg);

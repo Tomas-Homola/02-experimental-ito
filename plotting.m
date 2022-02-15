@@ -68,8 +68,8 @@ data100_def = readmatrix('data100_def.csv');
 count = count - 1; % minus prvy riadok, kde je ulozena casova os
 
 %% Vizualizacia
-figure('Name', '100 trajectories', 'NumberTitle', 'off');
-title('100 trajectories of Ito process')
+figure('Name', '100 trajectories definition', 'NumberTitle', 'off');
+title('100 trajectories of Ito process by definition')
 xlabel('Time', 'FontSize', 20)
 ylabel('Angle θ', 'FontSize', 20)
 % ytickformat('%.0f°')
@@ -88,8 +88,8 @@ data1000_def = readmatrix('data1000_def.csv');
 count = count - 1; % minus prvy riadok, kde je ulozena casova os
 
 %% Vizualizacia
-figure('Name', '1000 trajectories', 'NumberTitle', 'off');
-title('1000 trajectories of Ito process')
+figure('Name', '1000 trajectories definition', 'NumberTitle', 'off');
+title('1000 trajectories of Ito process by definition')
 xlabel('Time', 'FontSize', 20)
 ylabel('Angle θ', 'FontSize', 20)
 % ytickformat('%.0f°')
