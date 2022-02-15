@@ -34,8 +34,8 @@ double volatility(double t, double W)
 int main()
 {
 	srand(time(0));
-	double endTime = 2000.0;
-	int division = 500;
+	double endTime = 1000.0;
+	int division = 501;
 	
 	ItoProcess ip(endTime, division, 100);
 	//ip.computeTrajectoriesTransform(&g_deg);
