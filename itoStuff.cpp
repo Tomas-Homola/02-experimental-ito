@@ -56,7 +56,7 @@ void ItoProcess::computeTrajectoriesTransform(double(*transform)(double, double)
 void ItoProcess::computeTrajectoriesDefinition(double(*drift)(double, double), double(*volatility)(double, double))
 {
 	double riemann = 0.0, ito = 0.0;
-
+	
 	std::cout << "computing trajectories ... ";
 	for (size_t i = 0; i < trajectoriesCount; i++)
 	{
@@ -68,17 +68,13 @@ void ItoProcess::computeTrajectoriesDefinition(double(*drift)(double, double), d
 		}
 
 		// Transformacia na Itoov proces
-		trajectories[i][0] = PI / 4; //??
-		//trajectories[i][0] = 1.3;
+		trajectories[i][0] = PI / 4;
 		for (size_t j = 1; j < timeAxisTicks; j++)
 		{
 			riemann = NIntegrate_Riemann(0, j, drift, this, i);
 			ito = NIntegrate_Ito(0, j, volatility, this, i);
-
 			trajectories[i][j] = trajectories[i][0] + riemann + ito;
-			//std::cout << "riemann = " << riemann << "\nito = " << ito << "\n";
 		}
-		//std::cout << i + 1 << " trajectory done\n";
 	}
 	std::cout << " done\n";
 }
@@ -182,14 +178,13 @@ double NIntegrate_Riemann(int a, int b, double(*function)(double, double), ItoPr
 	double tempLeft = 0.0, tempRight = 0.0;
 	double deltaT = 0.0;
 
-	for (size_t i = 1; i <= b; i++)
+	for (size_t i = a; i < b; i++)
 	{
-		deltaT = ip->timeAxis[i] - ip->timeAxis[i - 1];
-		tempLeft = deltaT * (function(ip->timeAxis[i - 1], ip->trajectories[trajectory][i - 1]));
-		tempRight = deltaT * (function(ip->timeAxis[i], ip->trajectories[trajectory][i]));
+		deltaT = ip->timeAxis[i + 1] - ip->timeAxis[i];
+		tempLeft = deltaT * (function(ip->timeAxis[i], ip->trajectories[trajectory][i]));
+		tempRight = deltaT * (function(ip->timeAxis[i + 1], ip->trajectories[trajectory][i + 1]));
 
 		result += 0.5 * (tempLeft + tempRight);
-		//result += tempLeft;
 	}
 	
 	return result;
@@ -199,10 +194,10 @@ double NIntegrate_Ito(int a, int b, double(*function)(double, double), ItoProces
 	double result = 0.0;
 	double deltaW = 0.0;
 
-	for (size_t i = 1; i <= b; i++)
+	for (size_t i = a; i < b; i++)
 	{
-		deltaW = ip->trajectories[trajectory][i] - ip->trajectories[trajectory][i - 1];
-		result += function(ip->timeAxis[i - 1], ip->trajectories[trajectory][i - 1]) * deltaW;
+		deltaW = ip->trajectories[trajectory][i + 1] - ip->trajectories[trajectory][i];
+		result += function(ip->timeAxis[i], ip->trajectories[trajectory][i]) * deltaW;
 	}
 
 	return result;
