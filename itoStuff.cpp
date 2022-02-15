@@ -69,14 +69,13 @@ void ItoProcess::computeTrajectoriesDefinition(double(*drift)(double, double), d
 
 		// Transformacia na Itoov proces
 		trajectories[i][0] = PI / 4; //??
+		//trajectories[i][0] = 1.3;
 		for (size_t j = 1; j < timeAxisTicks; j++)
 		{
-			riemann = NIntegrate_Riemann(0.0, j, drift, this, i);
-			ito = NIntegrate_Ito(0.0, j, volatility, this, i);
+			riemann = NIntegrate_Riemann(0, j, drift, this, i);
+			ito = NIntegrate_Ito(0, j, volatility, this, i);
 
 			trajectories[i][j] = trajectories[i][0] + riemann + ito;
-			if (trajectories[i][j] < -10000.0)
-				std::cout << "riemann: " << riemann << "\nito: " << ito << "\n";
 			//std::cout << "riemann = " << riemann << "\nito = " << ito << "\n";
 		}
 		//std::cout << i + 1 << " trajectory done\n";
@@ -179,7 +178,6 @@ double normalDistribution(double mean, double dispersion)
 
 double NIntegrate_Riemann(int a, int b, double(*function)(double, double), ItoProcess* ip, int trajectory)
 {
-	// namiesto "b" dat ako vztup index casu, po ktory sa ma integrovat, aby sa tam dal vopchat aj W
 	double result = 0.0;
 	double tempLeft = 0.0, tempRight = 0.0;
 	double deltaT = 0.0;
@@ -188,10 +186,10 @@ double NIntegrate_Riemann(int a, int b, double(*function)(double, double), ItoPr
 	{
 		deltaT = ip->timeAxis[i] - ip->timeAxis[i - 1];
 		tempLeft = deltaT * (function(ip->timeAxis[i - 1], ip->trajectories[trajectory][i - 1]));
-		//tempRight = deltaT * (function(ip->timeAxis[i], ip->trajectories[trajectory][i]));
+		tempRight = deltaT * (function(ip->timeAxis[i], ip->trajectories[trajectory][i]));
 
-		//result += 0.5 * (tempLeft + tempRight);
-		result += tempLeft;
+		result += 0.5 * (tempLeft + tempRight);
+		//result += tempLeft;
 	}
 	
 	return result;
