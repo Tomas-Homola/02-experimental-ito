@@ -18,12 +18,12 @@ double g_deg(double t, double W)
 
 double drift(double t, double W)
 {
-	double upper1 = 1.0 + t + 2.0 * sqrt(t + 1.0) * W;
-	double lower1 = 2.0 * sqrt(t + 1.0) * (2.0 + 3.0 * t + t * t + 2.0 * sqrt(t + 1.0) * W + W * W);
-	double upper2 = 2.0 * (t + 1.0) * (sqrt(t + 1.0) + W);
-	double lower2 = 2.0 + 3.0 * t + t * t + 2.0 * sqrt(t + 1.0) * W + W * W;
+	double upper1 = -((1.0 + t) * (sqrt(1.0 + t) + W));
+	double lower1 = (2.0 + 3.0 * t + t * t + 2.0 * sqrt(1.0 + t) * W + W * W);
+	double upper2 = -(1.0 + t + 2.0 * sqrt(1.0 + t) * W);
+	double lower2 = (2.0 * sqrt(1.0 + t) * (2.0 + 3.0 * t + t * t + 2.0 * sqrt(1.0 + t) * W + W * W));
 
-	return -(upper1 / lower1) - 0.5 * (upper2 / (lower2 * lower2));
+	return (upper1 / (lower1 * lower1)) + 0.5 * (upper2 / lower2);
 }
 
 double volatility(double t, double W)
