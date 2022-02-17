@@ -7,76 +7,80 @@ ItoProcess::ItoProcess(double timeEndValue, unsigned int timeAxisTicks, unsigned
 	this->trajectoriesCount = trajectoriesCount; // pocet trajektorii
 
 	this->timeAxis = linspace(0.0, timeEndValue, timeAxisTicks); // vytvorenie casovej osi
-	this->trajectories = new double* [trajectoriesCount]; // alokacia pamati pre trajektorie
+	this->wienerSample = new double* [trajectoriesCount]; // alokacia pamati pre vzorku wienerovho procesu
+	this->itoTrajectories = new double* [trajectoriesCount]; // alokacia pamati pre trajektorie
 
 	for (size_t i = 0; i < trajectoriesCount; i++)
 	{
-		//this->trajectories[i] = new double[timeAxisTicks]; // alokacia pamati pre jednotlive trajektorie
-		this->trajectories[i] = (double*)calloc(timeAxisTicks, sizeof(double));
+		this->wienerSample[i] = (double*)calloc(timeAxisTicks, sizeof(double));
+		this->itoTrajectories[i] = (double*)calloc(timeAxisTicks, sizeof(double));
 	}
-}
 
+	computeWienerSample(); // vypocitanie vzorky trajektorii wienerovho procesu
+}
 ItoProcess::~ItoProcess()
 {
 	//std::cout << "wiener destructor\n";
 	delete[] this->timeAxis;
 	for (size_t i = 0; i < this->trajectoriesCount; i++)
 	{
-		delete[] this->trajectories[i];
+		delete[] this->wienerSample[i];
+		delete[] this->itoTrajectories[i];
 	}
-	delete[] trajectories;
+	delete[] wienerSample;
+	delete[] itoTrajectories;
 }
 
+void ItoProcess::computeWienerSample()
+{
+	// Vypocitanie vzorky trajektorii wienerovho procesu
+	std::cout << "computing wiener sample ... ";
+	for (size_t i = 0; i < this->trajectoriesCount; i++)
+	{
+		wienerSample[i][0] = 0.0;
+		for (size_t j = 1; j < timeAxisTicks; j++)
+		{
+			wienerSample[i][j] = wienerSample[i][j - 1] + normalDistribution(0.0, timeAxis[j] - timeAxis[j - 1]);
+		}
+	}
+	std::cout << "done\n";
+}
 void ItoProcess::computeTrajectoriesTransform(double(*transform)(double, double))
 {
 	double t = 0.0, W = 0.0;
 
+	std::cout << "Computing trajectories by transform ... ";
 	for (size_t i = 0; i < trajectoriesCount; i++)
 	{
-		// Vypocitanie trajektorie wienerovho procesu
-		trajectories[i][0] = normalDistribution(0.0, timeAxis[0] - 0.0);
-		for (size_t j = 1; j < timeAxisTicks; j++)
-		{
-			trajectories[i][j] = trajectories[i][j - 1] + normalDistribution(0.0, timeAxis[j] - timeAxis[j - 1]);
-		}
-
 		// Transformacia na Itoov proces
 		for (size_t j = 0; j < timeAxisTicks; j++)
 		{
-			t = timeAxis[j];
-			W = trajectories[i][j];
+			t = timeAxis[j]; // t
+			W = wienerSample[i][j]; // W(ω, t)
 
-			trajectories[i][j] = transform(t, W);
+			itoTrajectories[i][j] = transform(t, W); // g(t, W(ω,t))
 		}
-		//std::cout << i << "done\n";
 	}
-	std::cout << "computing trajectories done\n";
+	std::cout << "done\n";
 }
-
 void ItoProcess::computeTrajectoriesDefinition(double(*drift)(double, double), double(*volatility)(double, double))
 {
 	double riemann = 0.0, ito = 0.0;
 	
-	std::cout << "computing trajectories ... ";
+	std::cout << "computing itoTrajectories by definition ... ";
 	for (size_t i = 0; i < trajectoriesCount; i++)
 	{
-		// Vypocitanie trajektorie wienerovho procesu
-		trajectories[i][0] = normalDistribution(0.0, timeAxis[0] - 0.0);
-		for (size_t j = 1; j < timeAxisTicks; j++)
-		{
-			trajectories[i][j] = trajectories[i][j - 1] + normalDistribution(0.0, timeAxis[j] - timeAxis[j - 1]);
-		}
-
 		// Transformacia na Itoov proces
-		trajectories[i][0] = PI / 4;
+		itoTrajectories[i][0] = PI / 4;
 		for (size_t j = 1; j < timeAxisTicks; j++)
 		{
-			riemann = NIntegrate_Riemann(0, j, drift, this, i);
-			ito = NIntegrate_Ito(0, j, volatility, this, i);
-			trajectories[i][j] = trajectories[i][0] + riemann + ito;
+			riemann = NIntegrate_Riemann(j - 1, j, drift, this, i);
+			ito = NIntegrate_Ito(j - 1, j, volatility, this, i);
+			itoTrajectories[i][j] =  riemann + ito;
+			//itoTrajectories[i][0] +
 		}
 	}
-	std::cout << " done\n";
+	std::cout << "done\n";
 }
 
 void ItoProcess::reset(double timeEndValue, unsigned int timeAxisTicks, unsigned int trajectoriesCount)
@@ -85,30 +89,50 @@ void ItoProcess::reset(double timeEndValue, unsigned int timeAxisTicks, unsigned
 	delete[] this->timeAxis; // vymazanie udajov starej casovej osi
 	for (size_t i = 0; i < this->trajectoriesCount; i++) // vymazanie starych udajov jednotlivych trajektorii
 	{
-		delete[] this->trajectories[i];
+		delete[] this->wienerSample[i];
+		delete[] this->itoTrajectories[i];
 	}
-	delete[] trajectories; // vymazanie starych trajektorii
+	delete[] wienerSample;
+	delete[] itoTrajectories; // vymazanie starych trajektorii
 
 	// definovanie novych udajov
 	this->timeAxisTicks = timeAxisTicks; // nove delenie casovej osi
 	this->trajectoriesCount = trajectoriesCount; // novy pocet trajektorii
 
 	this->timeAxis = linspace(0.0, timeEndValue, timeAxisTicks); // vytvorenie novej casovej osi
-	this->trajectories = new double* [trajectoriesCount]; // alokacia pamati pre nove trajektorie
+	this->wienerSample = new double* [trajectoriesCount];
+	this->itoTrajectories = new double* [trajectoriesCount]; // alokacia pamati pre nove trajektorie
 
 	for (size_t i = 0; i < trajectoriesCount; i++)
 	{
-		this->trajectories[i] = (double*)calloc(timeAxisTicks, sizeof(double)); // alokacia pamati pre udaje jednotlivych trajektorii
+		this->wienerSample[i] = (double*)calloc(timeAxisTicks, sizeof(double));
+		this->itoTrajectories[i] = (double*)calloc(timeAxisTicks, sizeof(double)); // alokacia pamati pre udaje jednotlivych trajektorii
 	}
+
+	computeWienerSample(); // vypocitanie novej vzorky trajektorii wienerovho procesu
 }
+void ItoProcess::clearItoTrajectories()
+{
+	// vycistenie starych hodnot trajektorii itoovho procesu
+	std::cout << "Clearing trajectories ... ";
+	for (size_t i = 0; i < trajectoriesCount; i++)
+	{
+		for (size_t j = 0; j < timeAxisTicks; j++)
+		{
+			itoTrajectories[i][j] = 0.0;
+		}
+	}
+	std::cout << "done\n";
+}
+
 bool ItoProcess::exportData(std::string fileName)
 {
-	std::cout << "Exporting ...";
 	fileName += ".csv";
 	std::ofstream exportFile(fileName);
 	if (!exportFile.is_open())
 		return false;
 
+	std::cout << "Exporting \"" << fileName << "\" ... ";
 	for (size_t i = 0; i < timeAxisTicks; i++)
 	{
 		exportFile << timeAxis[i] << ";";
@@ -120,13 +144,41 @@ bool ItoProcess::exportData(std::string fileName)
 	{
 		for (size_t j = 0; j < timeAxisTicks; j++)
 		{
-			exportFile << trajectories[i][j] << ";";
+			exportFile << itoTrajectories[i][j] << ";";
 		}
 		exportFile << "\n";
 	}
 
 	exportFile.close();
-	std::cout << " export done\n";
+	std::cout << "done\n";
+	return true;
+}
+bool ItoProcess::exportWiener(std::string fileName)
+{
+	fileName += ".csv";
+	std::ofstream exportFile(fileName);
+	if (!exportFile.is_open())
+		return false;
+
+	std::cout << "Exporting \"" << fileName << "\" ... ";
+	for (size_t i = 0; i < timeAxisTicks; i++)
+	{
+		exportFile << timeAxis[i] << ";";
+	}
+
+	exportFile << "\n";
+
+	for (size_t i = 0; i < trajectoriesCount; i++)
+	{
+		for (size_t j = 0; j < timeAxisTicks; j++)
+		{
+			exportFile << wienerSample[i][j] << ";";
+		}
+		exportFile << "\n";
+	}
+
+	exportFile.close();
+	std::cout << "done\n";
 	return true;
 }
 void ItoProcess::printData()
@@ -142,7 +194,7 @@ void ItoProcess::printData()
 	{
 		for (size_t j = 0; j < timeAxisTicks; j++)
 		{
-			std::cout << trajectories[i][j] << ",";
+			std::cout << itoTrajectories[i][j] << ",";
 		}
 		std::cout << "\n";
 	}
@@ -181,10 +233,11 @@ double NIntegrate_Riemann(int a, int b, double(*function)(double, double), ItoPr
 	for (size_t i = a; i < b; i++)
 	{
 		deltaT = ip->timeAxis[i + 1] - ip->timeAxis[i];
-		tempLeft = deltaT * (function(ip->timeAxis[i], ip->trajectories[trajectory][i]));
-		tempRight = deltaT * (function(ip->timeAxis[i + 1], ip->trajectories[trajectory][i + 1]));
+		tempLeft = deltaT * (function(ip->timeAxis[i], ip->wienerSample[trajectory][i]));
+		tempRight = deltaT * (function(ip->timeAxis[i + 1], ip->wienerSample[trajectory][i + 1]));
 
 		result += 0.5 * (tempLeft + tempRight);
+		//result += tempLeft;
 	}
 	
 	return result;
@@ -196,8 +249,8 @@ double NIntegrate_Ito(int a, int b, double(*function)(double, double), ItoProces
 
 	for (size_t i = a; i < b; i++)
 	{
-		deltaW = ip->trajectories[trajectory][i + 1] - ip->trajectories[trajectory][i];
-		result += function(ip->timeAxis[i], ip->trajectories[trajectory][i]) * deltaW;
+		deltaW = ip->wienerSample[trajectory][i + 1] - ip->wienerSample[trajectory][i];
+		result += function(ip->timeAxis[i], ip->wienerSample[trajectory][i]) * deltaW;
 	}
 
 	return result;

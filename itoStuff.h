@@ -17,16 +17,21 @@ public:
 	double* timeAxis = nullptr; // pole na ukladanie hodnot pre jednotlive casy
 
 	unsigned int trajectoriesCount = 0; // pocet trajektorii
-	double** trajectories = nullptr; // pole, kde su ulozene jednotlive trajektorie
+	double** wienerSample = nullptr; // pole, kde 
+	double** itoTrajectories = nullptr; // pole, kde su ulozene jednotlive trajektorie
 
 	ItoProcess(double timeEndValue, unsigned int timeAxisTicks, unsigned int trajectoriesCount);
 	~ItoProcess();
 
+	void computeWienerSample();
 	void computeTrajectoriesTransform(double (*transform)(double, double)); // vypocitanie trajektorii pomocou transformacie Wienerovho procesu
 	void computeTrajectoriesDefinition(double (*drift)(double, double), double(*volatility)(double, double)); // vypocitanie trajektorii pomocou definicie s integralmi
+	
 	void reset(double timeEndValue, unsigned int timeAxisTicks, unsigned int trajectoriesCount);
+	void clearItoTrajectories();
 
 	bool exportData(std::string fileName);
+	bool exportWiener(std::string fileName);
 	void printData();
 };
 
