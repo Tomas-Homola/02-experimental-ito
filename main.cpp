@@ -34,18 +34,27 @@ double volatility(double t, double W)
 int main()
 {
 	srand(time(0));
-	double endTime = 1000.0;
-	int division = 1001;
+	double endTime = 2000.0;
+	int division = 2001;
 	
-	ItoProcess ip(endTime, division, 100);
-	//ip.computeTrajectoriesTransform(&g_deg);
-	ip.computeTrajectoriesDefinition(&drift, &volatility);
-	ip.exportData("data100_def");	
-	ip.reset(endTime, division, 1000);
+	ItoProcess ip(endTime, division, 100); // vytvorenie objektu pre itoov proces
 	
-	//ip.computeTrajectoriesTransform(&g_deg);
-	ip.computeTrajectoriesDefinition(&drift, &volatility);
-	ip.exportData("data1000_def");
+	//#################### 100 trajektorii ####################//
+	ip.computeTrajectoriesTransform(&g_rad); // vypocet cez transformaciu wienerovho procesu
+	ip.exportData("data100_transf"); // export udajov
+	//ip.clearItoTrajectories(); // vycistenie trajektorii, aby sa dali vypocitat nove, mozno ani netreba?
+	
+	ip.computeTrajectoriesDefinition(&drift, &volatility); // vypocet cez definiciu itoovho procesu
+	ip.exportData("data100_def");	// export udajov
+	
+	ip.reset(endTime, division, 1000); // zresetovanie objektu pre itoov proces
+
+	//#################### 1000 trajektorii ####################//
+	ip.computeTrajectoriesTransform(&g_rad); // vypocet cez transformaciu wienerovho procesu
+	ip.exportData("data1000_transf"); // export udajov
+	
+	ip.computeTrajectoriesDefinition(&drift, &volatility); // vypocet cez definiciu itoovho procesu
+	ip.exportData("data1000_def"); // export udajov
 	
 	return 0;
 }
