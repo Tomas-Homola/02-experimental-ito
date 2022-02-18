@@ -76,7 +76,8 @@ void ItoProcess::computeTrajectoriesDefinition(double(*drift)(double, double), d
 		{
 			riemann = NIntegrate_Riemann(j - 1, j, drift, this, i);
 			ito = NIntegrate_Ito(j - 1, j, volatility, this, i);
-			itoTrajectories[i][j] =  riemann + ito;
+
+			itoTrajectories[i][j] = itoTrajectories[i][j - 1] + riemann + ito;
 			//itoTrajectories[i][0] +
 		}
 	}
@@ -233,11 +234,12 @@ double NIntegrate_Riemann(int a, int b, double(*function)(double, double), ItoPr
 	for (size_t i = a; i < b; i++)
 	{
 		deltaT = ip->timeAxis[i + 1] - ip->timeAxis[i];
-		tempLeft = deltaT * (function(ip->timeAxis[i], ip->wienerSample[trajectory][i]));
+		//tempLeft = deltaT * (function(ip->timeAxis[i], ip->wienerSample[trajectory][i]));
 		tempRight = deltaT * (function(ip->timeAxis[i + 1], ip->wienerSample[trajectory][i + 1]));
 
-		result += 0.5 * (tempLeft + tempRight);
+		//result += 0.5 * (tempLeft + tempRight);
 		//result += tempLeft;
+		result += tempRight;
 	}
 	
 	return result;
