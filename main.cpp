@@ -31,30 +31,44 @@ double volatility(double t, double W)
 	return (t + 1.0) / (2.0 + 3.0 * t + t * t + 2.0 * sqrt(t + 1.0) * W + W * W);
 }
 
+double g(double t, double W)
+{
+	return (t * sin(W));
+}
+double d(double t, double W)
+{
+	return (1.0 - 0.5 * t) * sin(W);
+}
+double v(double t, double W)
+{
+	return (t* cos(W));
+}
+
 int main()
 {
 	srand(time(0));
-	double endTime = 2000.0;
-	int division = 2001;
+	double endTime = 1.0;
+	int division = 20;
 	
 	ItoProcess ip(endTime, division, 100); // vytvorenie objektu pre itoov proces
 	
 	//#################### 100 trajektorii ####################//
-	ip.computeTrajectoriesTransform(&g_rad); // vypocet cez transformaciu wienerovho procesu
+	ip.computeTrajectoriesTransform(&g); // vypocet cez transformaciu wienerovho procesu
 	ip.exportData("data100_transf"); // export udajov
 	//ip.clearItoTrajectories(); // vycistenie trajektorii, aby sa dali vypocitat nove, mozno ani netreba?
 	
-	ip.computeTrajectoriesDefinition(&drift, &volatility); // vypocet cez definiciu itoovho procesu
+	//ip.computeTrajectoriesDefinition(&drift, &volatility); // vypocet cez definiciu itoovho procesu
+	ip.computeTrajectoriesDefinition(&d, &v); // vypocet cez definiciu itoovho procesu
 	ip.exportData("data100_def");	// export udajov
 	
-	ip.reset(endTime, division, 1000); // zresetovanie objektu pre itoov proces
-
-	//#################### 1000 trajektorii ####################//
-	ip.computeTrajectoriesTransform(&g_rad); // vypocet cez transformaciu wienerovho procesu
-	ip.exportData("data1000_transf"); // export udajov
-	
-	ip.computeTrajectoriesDefinition(&drift, &volatility); // vypocet cez definiciu itoovho procesu
-	ip.exportData("data1000_def"); // export udajov
+	//ip.reset(endTime, division, 1000); // zresetovanie objektu pre itoov proces
+	//
+	////#################### 1000 trajektorii ####################//
+	//ip.computeTrajectoriesTransform(&g_rad); // vypocet cez transformaciu wienerovho procesu
+	//ip.exportData("data1000_transf"); // export udajov
+	//
+	//ip.computeTrajectoriesDefinition(&drift, &volatility); // vypocet cez definiciu itoovho procesu
+	//ip.exportData("data1000_def"); // export udajov
 	
 	return 0;
 }
