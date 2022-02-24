@@ -23,7 +23,7 @@ double drift(double t, double W)
 	double upper2 = -(1.0 + t + 2.0 * sqrt(1.0 + t) * W);
 	double lower2 = (2.0 * sqrt(1.0 + t) * (2.0 + 3.0 * t + t * t + 2.0 * sqrt(1.0 + t) * W + W * W));
 
-	return (upper1 / (lower1 * lower1)) + 0.5 * (upper2 / lower2);
+	return (upper1 / (lower1 * lower1)) + (upper2 / lower2);
 }
 
 double volatility(double t, double W)
@@ -44,23 +44,38 @@ double v(double t, double W)
 	return (t* cos(W));
 }
 
+double g1(double t, double W)
+{
+	return atan(1 + W);
+}
+
+double d1(double t, double W)
+{
+	return -(1 + W) / ((1 + (1 + W) * (1 + W)) * (1 + (1 + W) * (1 + W)));
+}
+
+double v1(double t, double W)
+{
+	return 1.0 / (1.0 + (1 + W) * (1 + W));
+}
+
 int main()
 {
 	srand(time(0));
-	double endTime = 1.0;
-	int division = 20;
+	double endTime = 1000.0;
+	int division = 10001;
 	
-	ItoProcess ip(endTime, division, 100); // vytvorenie objektu pre itoov proces
+	ItoProcess ip(endTime, division, 6); // vytvorenie objektu pre itoov proces
 	
 	//#################### 100 trajektorii ####################//
-	ip.computeTrajectoriesTransform(&g); // vypocet cez transformaciu wienerovho procesu
+	ip.computeTrajectoriesTransform(&g_rad); // vypocet cez transformaciu wienerovho procesu
 	ip.exportData("data100_transf"); // export udajov
 	//ip.clearItoTrajectories(); // vycistenie trajektorii, aby sa dali vypocitat nove, mozno ani netreba?
 	
 	//ip.computeTrajectoriesDefinition(&drift, &volatility); // vypocet cez definiciu itoovho procesu
-	ip.computeTrajectoriesDefinition(&d, &v); // vypocet cez definiciu itoovho procesu
+	ip.computeTrajectoriesDefinition(&drift, &volatility); // vypocet cez definiciu itoovho procesu
 	ip.exportData("data100_def");	// export udajov
-	
+	ip.exportWiener("data_Wiener");
 	//ip.reset(endTime, division, 1000); // zresetovanie objektu pre itoov proces
 	//
 	////#################### 1000 trajektorii ####################//

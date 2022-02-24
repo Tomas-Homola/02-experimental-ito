@@ -1,3 +1,13 @@
+dataW = readmatrix('data_Wiener.csv');
+[count, ~] = size(dataW);
+
+figure
+hold on
+for n = 2:count
+	plot(dataW(1, :), dataW(n, :), ...
+		'-', 'LineWidth', 0.5);
+end
+hold off
 %% 100 trajektorii cez transformaciu
 data100_transf = readmatrix('data100_transf.csv');
 
@@ -10,7 +20,7 @@ title('100 trajectories of Ito process by transform')
 xlabel('Time', 'FontSize', 20)
 ylabel('Angle θ', 'FontSize', 20)
 hold on
-for n = 2:4
+for n = 2:count
 	plot(data100_transf(1, :), data100_transf(n, :), ...
 		'-', 'LineWidth', 0.5);
 end
@@ -47,7 +57,7 @@ title('100 trajectories of Ito process by definition')
 xlabel('Time', 'FontSize', 20)
 ylabel('Angle θ', 'FontSize', 20)
 hold on
-for n = 2:4
+for n = 2:count
 	plot(data100_def(1, :), data100_def(n, :), ...
 		'-', 'LineWidth', 0.5);
 end
